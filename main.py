@@ -396,8 +396,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
                     ri.setBrush(colours[EditGround])
                     item = ri
-                    text = QtWidgets.QGraphicsSimpleTextItem(str(obj.data), ri)
-                    text.setPos(rx + 2, ry + 2)
 
                 elif obj.objType == EditCoin:
                     ei = QtWidgets.QGraphicsEllipseItem(rx + 1, ry, rw - 2, rh)
@@ -420,17 +418,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     item = ri
 
                 elif obj.objType == EditPoo: # wrench
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry + 12, rw, rh - 12)
-                    ri.setBrush(QtGui.QColor(64, 64, 64))
+                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
+                    ri.setBrush(QtGui.QColor(158, 95, 25))
                     item = ri
 
                 elif obj.objType == EditDoor:
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry - 16, rw, rh)
+                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
                     ri.setBrush(QtGui.QColor(192, 187, 65))
                     item = ri
 
                 elif obj.objType == EditLift:
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh - 12)
+                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
                     ri.setBrush(QtGui.QColor(192, 187, 65))
                     item = ri
 
@@ -442,8 +440,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         ri.setBrush(Qt.magenta)
                     item = ri
 
-                item.setToolTip(str(obj.objType))
+                text = QtWidgets.QGraphicsSimpleTextItem(("" if obj.objType == -1 else str(obj.objType)), item)
+                text.setPos(rx + 2, ry + 2)
 
+                item.setToolTip(hex(obj.data))
+
+                item.setZValue(rz)
                 item.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable)
                 item.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
                 self.scene.addItem(item)
