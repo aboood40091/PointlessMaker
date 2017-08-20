@@ -467,7 +467,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def handleSceneSelectionChanged(self):
         items = self.scene.selectedItems()
-        if items.size() == 1:
+        if len(items) == 1:
             index = self.items.index(items[0])
             #self.objectList.setCurrentRow(index)
             self.objectList.setCurrentCell(index, 0)
