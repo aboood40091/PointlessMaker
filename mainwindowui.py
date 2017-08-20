@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # MarioUnmaker
-# Version 0.1
+# Version 0.2
 # Copyright © 2015 Treeki, 2017 Stella/AboodXD
 
 # This file is part of MarioUnmaker.

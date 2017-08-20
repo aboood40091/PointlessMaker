@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # MarioUnmaker
-# Version 0.1
+# Version 0.2
 # Copyright © 2015 Treeki, 2017 Stella/AboodXD
 
 # This file is part of MarioUnmaker.
@@ -357,6 +357,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             pos += cdt.size
 
+            levelname = b''.join(cdt.name.split(b'\x00\x00')).decode('utf-16-be')
+
+            self.setWindowTitle(('%s - MarioUnmaker v0.2' % levelname))
+
             self.objectList.setRowCount(cdt.numObjects)
             self.objectList.setColumnCount(14)
             self.objectList.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem("X"))
@@ -450,15 +454,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.objectList.setItem(i, 2, QtWidgets.QTableWidgetItem(str(obj.z//10)))
                 self.objectList.setItem(i, 3, QtWidgets.QTableWidgetItem(str(obj.w)))
                 self.objectList.setItem(i, 4, QtWidgets.QTableWidgetItem(str(obj.h)))
-                self.objectList.setItem(i, 5, QtWidgets.QTableWidgetItem(objectNames[obj.objType]))
-                self.objectList.setItem(i, 6, QtWidgets.QTableWidgetItem(hex(obj.parentFlags)));
+                self.objectList.setItem(i, 5, QtWidgets.QTableWidgetItem("" if obj.objType == -1 else objectNames[obj.objType]))
+                self.objectList.setItem(i, 6, QtWidgets.QTableWidgetItem("" if obj.parentFlags == -1 else hex(obj.parentFlags)));
                 self.objectList.setItem(i, 7, QtWidgets.QTableWidgetItem("" if obj.childType == -1 else objectNames[obj.childType]))
-                self.objectList.setItem(i, 8, QtWidgets.QTableWidgetItem(hex(obj.childFlags)))
+                self.objectList.setItem(i, 8, QtWidgets.QTableWidgetItem("" if obj.childFlags == -1 else hex(obj.childFlags)))
                 self.objectList.setItem(i, 9, QtWidgets.QTableWidgetItem(hex(obj.data)))
-                self.objectList.setItem(i, 10, QtWidgets.QTableWidgetItem(str(obj.linkID)))
-                self.objectList.setItem(i, 11, QtWidgets.QTableWidgetItem(str(obj.eIndex)))
-                self.objectList.setItem(i, 12, QtWidgets.QTableWidgetItem(str(obj._1E)))
-                self.objectList.setItem(i, 13, QtWidgets.QTableWidgetItem(str(obj.cTID)))
+                self.objectList.setItem(i, 10, QtWidgets.QTableWidgetItem("" if obj.linkID == -1 else str(obj.linkID)))
+                self.objectList.setItem(i, 11, QtWidgets.QTableWidgetItem("" if obj.eIndex == -1 else str(obj.eIndex)))
+                self.objectList.setItem(i, 12, QtWidgets.QTableWidgetItem("" if obj._1E == -1 else str(obj._1E)))
+                self.objectList.setItem(i, 13, QtWidgets.QTableWidgetItem("" if obj.cTID == -1 else str(obj.cTID)))
 
 
     def handleSceneSelectionChanged(self):
