@@ -20,302 +20,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import struct, sys
+import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 Qt = QtCore.Qt
 
 from mainwindowui import Ui_MainWindow
 
-EditKuribo = 0
-EditNokonoko = 1
-EditPakkun = 2
-EditHammerBros = 3
-EditRengaBlock = 4
-EditHatenaBlock = 5
-EditHardBlock = 6
-EditGround = 7
-EditCoin = 8
-EditDokan = 9
-EditJumpStep = 10
-EditLift = 11
-EditDossun = 12
-EditKillerHoudai = 13
-EditGroundMushroom = 14
-EditBombhei = 15
-EditGroundBox = 16
-EditBridge = 17
-EditPSwitch = 18
-EditPowBlock = 19
-EditSuperKinoko = 20
-EditChikuwaBlock = 21
-EditKumoBlock = 22
-EditOnpuBlock = 23
-EditFireBar = 24
-EditTogezo = 25
-EditGroundGoal = 26
-EditGoalPole = 27
-EditMet = 28
-EditClearBlock = 29
-EditJugem = 30
-EditJugemCloud = 31
-EditTsutaBlock = 32
-Edit1upKinoko = 33
-EditFireFlower = 34
-EditSuperStar = 35
-EditYouganLift = 36
-EditGroundStart = 37
-EditStartSignBoard = 38
-EditKameck = 39
-EditTogemet = 40
-EditTeresa = 41
-EditKoopaClown = 42
-EditToge = 43
-EditKinokoFunny = 44
-EditKutsuKuribo = 45
-EditKaron = 46
-EditSenkanHoudai = 47
-EditGesso = 48
-EditCastleBridge = 49
-EditCharaKinoko = 50
-EditDekaKinoko = 51
-EditHanachan = 52
-EditBeltConveyor = 53
-EditBurner = 54
-EditDoor = 55
-EditPukupuku = 56
-EditBlackPakkun = 57
-EditPoo = 58
-EditRail = 59
-EditBubble = 60
-EditWanwan = 61
-EditKoopa = 62
-EditIceBlock = 63
-EditTsuta = 64
-EditCharaMario = 65
-EditAirSignBoard = 66
-EditHalfHitWall = 67
-EditSaw = 68
-EditPlayer = 69
-
-objectNames = {0: "EditKuribo",
-               1: "EditNokonoko",
-               2: "EditPakkun",
-               3: "EditHammerBros",
-               4: "EditRengaBlock",
-               5: "EditHatenaBlock",
-               6: "EditHardBlock",
-               7: "EditGround",
-               8: "EditCoin",
-               9: "EditDokan",
-               10: "EditJumpStep",
-               11: "EditLift",
-               12: "EditDossun",
-               13: "EditKillerHoudai",
-               14: "EditGroundMushroom",
-               15: "EditBombhei",
-               16: "EditGroundBox",
-               17: "EditBridge",
-               18: "EditPSwitch",
-               19: "EditPowBlock",
-               20: "EditSuperKinoko",
-               21: "EditChikuwaBlock",
-               22: "EditKumoBlock",
-               23: "EditOnpuBlock",
-               24: "EditFireBar",
-               25: "EditTogezo",
-               26: "EditGroundGoal",
-               27: "EditGoalPole",
-               28: "EditMet",
-               29: "EditClearBlock",
-               30: "EditJugem",
-               31: "EditJugemCloud",
-               32: "EditTsutaBlock",
-               33: "Edit1upKinoko",
-               34: "EditFireFlower",
-               35: "EditSuperStar",
-               36: "EditYouganLift",
-               37: "EditGroundStart",
-               38: "EditStartSignBoard",
-               39: "EditKameck",
-               40: "EditTogemet",
-               41: "EditTeresa",
-               42: "EditKoopaClown",
-               43: "EditToge",
-               44: "EditKinokoFunny",
-               45: "EditKutsuKuribo",
-               46: "EditKaron",
-               47: "EditSenkanHoudai",
-               48: "EditGesso",
-               49: "EditCastleBridge",
-               50: "EditCharaKinoko",
-               51: "EditDekaKinoko",
-               52: "EditHanachan",
-               53: "EditBeltConveyor",
-               54: "EditBurner",
-               55: "EditDoor",
-               56: "EditPukupuku",
-               57: "EditBlackPakkun",
-               58: "EditPoo",
-               59: "EditRail",
-               60: "EditBubble",
-               61: "EditWanwan",
-               62: "EditKoopa",
-               63: "EditIceBlock",
-               64: "EditTsuta",
-               65: "EditCharaMario",
-               66: "EditAirSignBoard",
-               67: "EditHalfHitWall",
-               68: "EditSaw",
-               69: "EditPlayer"}
-
-
-class CourseData(struct.Struct):
-    def __init__(self):
-        super().__init__('>QI4xH6BQB7x64s2x2s4BH2BI96B2I12xI')
-
-    def data(self, data, pos):
-        (self.version,
-         self.checksum,
-         self.year,
-         self.month,
-         self.day,
-         self.hour,
-         self.minute,
-         self.unk1,
-         self.unk2,
-         self.unk3,
-         self.unk4,
-         self.name,
-         self.mode,
-         self.unk5,
-         self.theme,
-         self.unk6,
-         self.unk7,
-         self.timer,
-         self.scroll,
-         self.unk8,
-         self.unk9,
-         self.unk10,
-         self.unk11,
-         self.unk12,
-         self.unk13,
-         self.unk14,
-         self.unk15,
-         self.unk16,
-         self.unk17,
-         self.unk18,
-         self.unk19,
-         self.unk20,
-         self.unk21,
-         self.unk22,
-         self.unk23,
-         self.unk24,
-         self.unk25,
-         self.unk26,
-         self.unk27,
-         self.unk28,
-         self.unk29,
-         self.unk30,
-         self.unk31,
-         self.unk32,
-         self.unk33,
-         self.unk34,
-         self.unk35,
-         self.unk36,
-         self.unk37,
-         self.unk38,
-         self.unk39,
-         self.unk40,
-         self.unk41,
-         self.unk42,
-         self.unk43,
-         self.unk44,
-         self.unk45,
-         self.unk46,
-         self.unk47,
-         self.unk48,
-         self.unk49,
-         self.unk50,
-         self.unk51,
-         self.unk52,
-         self.unk53,
-         self.unk54,
-         self.unk55,
-         self.unk56,
-         self.unk57,
-         self.unk58,
-         self.unk59,
-         self.unk60,
-         self.unk61,
-         self.unk62,
-         self.unk63,
-         self.unk64,
-         self.unk65,
-         self.unk66,
-         self.unk67,
-         self.unk68,
-         self.unk69,
-         self.unk70,
-         self.unk71,
-         self.unk72,
-         self.unk73,
-         self.unk74,
-         self.unk75,
-         self.unk76,
-         self.unk77,
-         self.unk78,
-         self.unk79,
-         self.unk80,
-         self.unk81,
-         self.unk82,
-         self.unk83,
-         self.unk84,
-         self.unk85,
-         self.unk86,
-         self.unk87,
-         self.unk88,
-         self.unk89,
-         self.unk90,
-         self.unk91,
-         self.unk92,
-         self.unk93,
-         self.unk94,
-         self.unk95,
-         self.unk96,
-         self.unk97,
-         self.unk98,
-         self.unk99,
-         self.unk100,
-         self.unk101,
-         self.unk102,
-         self.unk103,
-         self.unk104,
-         self.unk105,
-         self.unk106,
-         self.unk107,
-         self.numObjects) = self.unpack_from(data, pos)
-
-
-class Object(struct.Struct):
-    def __init__(self):
-        super().__init__('>2Ih2b3I2b2h2b')
-
-    def data(self, data, pos):
-        (self.x,
-         self.z,
-         self.y,
-         self.w,
-         self.h,
-         self.parentFlags,
-         self.childFlags,
-         self.data,
-         self.objType,
-         self.childType,
-         self.linkID,
-         self.eIndex,
-         self._1E,
-         self.cTID) = self.unpack_from(data, pos)
+from classes import *
+from obj_names import *
+from qt_classes import *
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -326,21 +40,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.items = []
 
-        self.scene = QtWidgets.QGraphicsScene(self)
+        self.scene = Scene(0, -428, 3856, 440, self)
         self.graphicsView.setScene(self.scene)
         self.graphicsView.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
 
         self.scene.selectionChanged.connect(self.handleSceneSelectionChanged)
 
         colours = {}
-        colours[EditRengaBlock] = QtGui.QColor(158, 95, 25)
-        colours[EditHatenaBlock] = Qt.yellow
-        colours[EditHardBlock] = QtGui.QColor(212, 162, 103)
-        colours[EditKumoBlock] = QtGui.QColor(255, 252, 255) # cloud
         colours[EditKuribo] = QtGui.QColor(158, 95, 25)
         colours[EditDokan] = QtGui.QColor(182, 237, 57)
-        colours[EditGround] = QtGui.QColor(75, 202, 13)
-        colours[EditIceBlock] = Qt.cyan
         colours[EditTsuta] = QtGui.QColor(52, 190, 48) # vine
         colours[EditSaw] = QtGui.QColor(155, 183, 175)
 
@@ -356,6 +64,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             cdt.data(inb, pos)
 
             pos += cdt.size
+
+            self.mode = cdt.mode.decode('utf-8')
+            self.theme = cdt.theme
+
+            self.loadTileset()
 
             levelname = b''.join(cdt.name.split(b'\x00\x00')).decode('utf-16-be')
 
@@ -386,62 +99,136 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
                 rx = obj.x // 10
                 ry = -obj.y // 10
-                rz = obj.z // 10
+                rz = -obj.z // 10
                 ry -= (obj.h - 1) * 16
                 rw = obj.w * 16
                 rh = obj.h * 16
                 item = QtWidgets.QGraphicsItem
 
-                if obj.objType == EditGround:
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
-                    ri.setBrush(colours[EditGround])
-                    item = ri
+                noimage = True
+
+                if obj.objType == EditRengaBlock:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pi.setPixmap(self.tiles[1])
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditHatenaBlock:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pi.setPixmap(self.tiles[2])
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditHardBlock:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pi.setPixmap(self.tiles[6])
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditKumoBlock:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pi.setPixmap(self.tiles[102])
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditIceBlock:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pi.setPixmap(self.tiles[120])
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditGround:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pi.setPixmap(self.tiles[184+obj.data])
+                    item = pi
+                    noimage = False
 
                 elif obj.objType == EditCoin:
-                    ei = QtWidgets.QGraphicsEllipseItem(rx + 1, ry, rw - 2, rh)
-                    ei.setBrush(Qt.yellow)
-                    item = ei
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    if obj.parentFlags & 4 == 4:
+                        pi.setPixmap(self.tiles[256])
+                    else:
+                        pi.setPixmap(self.tiles[7])
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditDokan:
+                    pi = PixmapItem(rx, ry)
+                    direction = obj.parentFlags & 0x60
+                    if direction == 0x40:
+                        pi.setOffset(float(rx), float(ry))
+                    else:
+                        ry += (obj.h - 1) * 16
+                        if direction == 0x60:
+                            pi.setOffset(float(rx-16), float(ry))
+                        else:
+                            rx -= (obj.w - 1) * 16
+                            if not direction:
+                                pi.setOffset(float(rx+16), float(ry))
+                            else:
+                                pi.setOffset(float(rx), float(ry-16))
+                    pix = self.paintPipe(obj.w, obj.h, direction)
+                    pi.setPixmap(pix)
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditGroundBox:
+                    pi = PixmapItem(rx, ry)
+                    type_ = ((obj.parentFlags >> 16) & 0xF) // 4
+                    pi.setOffset(float(rx), float(ry))
+                    pix = self.paintGroundBox(obj.w, obj.h, type_)
+                    pi.setPixmap(pix)
+                    item = pi
+                    noimage = False
 
                 elif obj.objType == EditKuribo:
-                    ei = QtWidgets.QGraphicsEllipseItem(rx, ry, rw, rh)
+                    ei = EllipseItem(rx, ry, rw, rh)
                     ei.setBrush(colours[EditKuribo])
                     item = ei
 
                 elif obj.objType == EditSaw:
-                    ei = QtWidgets.QGraphicsEllipseItem(rx, ry, rw, rh)
+                    ei = EllipseItem(rx, ry, rw, rh)
                     ei.setBrush(colours[EditSaw])
                     item = ei
 
                 elif obj.objType == EditTsuta:
-                    ri = QtWidgets.QGraphicsRectItem(rx + 6, ry, rw - 12, rh)
+                    ri = RectItem(rx + 8, ry, rw - 16, rh)
                     ri.setBrush(colours[EditTsuta])
                     item = ri
 
                 elif obj.objType == EditPoo: # wrench
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
+                    ri = RectItem(rx, ry, rw, rh)
                     ri.setBrush(QtGui.QColor(158, 95, 25))
                     item = ri
 
                 elif obj.objType == EditDoor:
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
+                    ri = RectItem(rx, ry, rw, rh)
                     ri.setBrush(QtGui.QColor(192, 187, 65))
                     item = ri
 
                 elif obj.objType == EditLift:
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh)
+                    ri = RectItem(rx, ry, rw, rh)
                     ri.setBrush(QtGui.QColor(192, 187, 65))
                     item = ri
 
                 else:
-                    ri = QtWidgets.QGraphicsRectItem(rx, ry, rw, rh);
+                    ri = RectItem(rx, ry, rw, rh)
                     if obj.objType in colours:
                         ri.setBrush(colours[obj.objType])
                     else:
                         ri.setBrush(Qt.magenta)
                     item = ri
 
-                text = QtWidgets.QGraphicsSimpleTextItem(("" if obj.objType == -1 else str(obj.objType)), item)
-                text.setPos(rx + 2, ry + 2)
+                if noimage:
+                    text = QtWidgets.QGraphicsSimpleTextItem(("" if obj.objType == -1 else str(obj.objType)), item)
+                    text.setPos(rx + 2, ry + 2)
 
                 item.setToolTip(hex(obj.data))
 
@@ -473,6 +260,138 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             index = self.items.index(items[0])
             #self.objectList.setCurrentRow(index)
             self.objectList.setCurrentCell(index, 0)
+
+
+    def loadTileset(self):
+        TileWidths = {"M1": 16, "M3": 16, "MW": 16, "WU": 64}
+
+        themes = {0: "plain", 1: "underground", 2: "castle", 3: "airship", 4: "water", 5: "hauntedhouse"}
+
+        TileWidth = TileWidths[self.mode]
+
+        Tileset = QtGui.QPixmap('tilesets/%s_Field_%s.png' % (self.mode, themes[self.theme]))
+        self.tiles = []
+        xcount = Tileset.width() // TileWidth
+        ycount = Tileset.height() // TileWidth
+        sourcex = 0
+        sourcey = 0
+
+        for y in range(ycount):
+            for x in range(xcount):
+                if self.mode == "WU":
+                    bmp = Tileset.copy(sourcex + 2, sourcey + 2, TileWidth - 4, TileWidth - 4).scaledToWidth(16, Qt.SmoothTransformation)
+                else:
+                    bmp = Tileset.copy(sourcex, sourcey, TileWidth, TileWidth)
+                self.tiles.append(bmp)
+                sourcex += TileWidth
+            sourcex = 0
+            sourcey += TileWidth
+
+
+    def paintPipe(self, w, h, direction):
+        pix = QtGui.QPixmap(w*16, h*16)
+        pix.fill(Qt.transparent)
+        painter = QtGui.QPainter(pix)
+
+        top = True
+
+        if direction in [0x40, 0x60]:
+            ys = {0x60: list(reversed(range(h))), 0x40: range(h)}
+
+            for y in ys[direction]:
+                for x in range(w):
+                    realX = x
+                    while realX > 1:
+                        realX -= 2
+                    if top:
+                        if direction == 0x40: # Up
+                            painter.drawPixmap(16*x, 16*y, self.tiles[14+1*realX])
+                        else: # Down
+                            painter.drawPixmap(16*x, 16*y, self.tiles[46+1*realX])
+
+                    else:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[30+1*realX])
+                top = False
+
+        elif direction in [0, 0x20]:
+            xs = {0: list(reversed(range(w))), 0x20: range(w)}
+
+            for x in xs[direction]:
+                for y in range(h):
+                    realY = y
+                    while realY > 1:
+                        realY -= 2
+                    if top:
+                        if not direction: # Right
+                            painter.drawPixmap(16*x, 16*y, self.tiles[13+16*realY])
+                        else: # Left
+                            painter.drawPixmap(16*x, 16*y, self.tiles[11+16*realY])
+
+                    else:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[12+16*realY])
+                top = False
+
+        painter.end()
+
+        return pix
+
+
+    def paintGroundBox(self, w, h, type_):
+        pix = QtGui.QPixmap(w*16, h*16)
+        pix.fill(Qt.transparent)
+        painter = QtGui.QPainter(pix)
+
+        # Top
+        if 0 < w < 3:
+            painter.drawPixmap(0, 0, 16, 16, self.tiles[55+3*type_])
+            if w > 1:
+                painter.drawPixmap(16, 0, 16, 16, self.tiles[57+3*type_])
+        elif w:
+            painter.drawPixmap(0, 0, 16, 16, self.tiles[55+3*type_])
+            painter.drawTiledPixmap(16, 0, (w-2)*16, 16, self.tiles[56+3*type_])
+            painter.drawPixmap(16+(w-2)*16, 0, 16, 16, self.tiles[57+3*type_])
+
+        # Middle
+        l1 = [71, 87]
+        l2 = [72, 88]
+        l3 = [73, 89]
+        if 0 < w < 3:
+            for y in range(1, h-1):
+                realY = y-1
+                while realY > 1:
+                    realY -= 2
+                painter.drawPixmap(0, 16*y, 16, 16, self.tiles[l1[realY]+3*type_])
+                if w > 1:
+                    painter.drawPixmap(16, 16*y, 16, 16, self.tiles[l3[realY]+3*type_])
+        elif w:
+            for y in range(1, h-1):
+                realY = y-1
+                while realY > 1:
+                    realY -= 2
+                painter.drawPixmap(0, 16*y, 16, 16, self.tiles[l1[realY]+3*type_])
+                for x in range(1, w-1):
+                    realX = x-1
+                    while realX > 1:
+                        realX -= 2
+                    if realX ==  realY:
+                        painter.drawTiledPixmap(16*x, 16*y, 16, 16, self.tiles[l2[0]+3*type_])
+                    else:
+                        painter.drawTiledPixmap(16*x, 16*y, 16, 16, self.tiles[l2[1]+3*type_])
+                painter.drawPixmap(16+((w-2)*16), 16*y, 16, 16, self.tiles[l3[realY]+3*type_])
+
+        # Bottom
+        if 0 < w < 3:
+            painter.drawPixmap(0, (h-1)*16, 16, 16, self.tiles[103+3*type_])
+            if w > 1:
+                painter.drawPixmap(16, (h-1)*16, 16, 16, self.tiles[105+3*type_])
+        elif w:
+            painter.drawPixmap(0, (h-1)*16, 16, 16, self.tiles[103+3*type_])
+            painter.drawTiledPixmap(16, (h-1)*16, (w-2)*16, 16, self.tiles[104+3*type_])
+            painter.drawPixmap(16+(w-2)*16, (h-1)*16, 16, 16, self.tiles[105+3*type_])
+
+        painter.end()
+
+        return pix
 
 
 if __name__ == '__main__':
