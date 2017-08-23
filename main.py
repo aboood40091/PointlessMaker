@@ -188,6 +188,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     item = pi
                     noimage = False
 
+                    zMult = ((obj.parentFlags & 0xF) + 3) // 4
+                    if not zMult: zMult = 1
+                    rz *= 2*zMult
+
+                elif obj.objType == EditGroundGoal:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pix = self.paintGroundGoal(obj.w, obj.h)
+                    pi.setPixmap(pix)
+                    item = pi
+                    noimage = False
+
+                elif obj.objType == EditGroundStart:
+                    pi = PixmapItem(rx, ry)
+                    pi.setOffset(float(rx), float(ry))
+                    pix = self.paintGroundStart(obj.w, obj.h)
+                    pi.setPixmap(pix)
+                    item = pi
+                    noimage = False
+
                 elif obj.objType == EditKuribo:
                     ei = EllipseItem(rx, ry, rw, rh)
                     ei.setBrush(colours[EditKuribo])
@@ -388,6 +408,62 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             painter.drawPixmap(0, (h-1)*16, 16, 16, self.tiles[103+3*type_])
             painter.drawTiledPixmap(16, (h-1)*16, (w-2)*16, 16, self.tiles[104+3*type_])
             painter.drawPixmap(16+(w-2)*16, (h-1)*16, 16, 16, self.tiles[105+3*type_])
+
+        painter.end()
+
+        return pix
+
+
+    def paintGroundStart(self, w, h):
+        w -= 3
+        pix = QtGui.QPixmap(w*16, h*16)
+        pix.fill(Qt.transparent)
+        painter = QtGui.QPainter(pix)
+
+        edge = True
+
+        for x in list(reversed(range(w))):
+            for y in range(h):
+                if edge:
+                    if not y:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[122])
+                    else:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[138])
+
+                else:
+                    if not y:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[121])
+                    else:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[137])
+            edge = False
+
+        painter.end()
+
+        return pix
+
+
+    def paintGroundGoal(self, w, h):
+        w -= 3
+        pix = QtGui.QPixmap(w*16, h*16)
+        pix.fill(Qt.transparent)
+        painter = QtGui.QPainter(pix)
+
+        edge = True
+
+        for x in range(w):
+            for y in range(h):
+                if edge:
+                    if not y:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[123])
+                    else:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[139])
+
+                else:
+                    if not y:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[124])
+                    else:
+                        painter.drawPixmap(16*x, 16*y, self.tiles[140])
+            edge = False
 
         painter.end()
 
