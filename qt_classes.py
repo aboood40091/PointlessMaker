@@ -35,8 +35,9 @@ if not hasattr(QtWidgets.QGraphicsRectItem, 'ItemSendsGeometryChanges'):
 
 class Scene(QtWidgets.QGraphicsScene):
     def __init__(self, *args):
+        self.zoneWidth = args[0]
         self.bgbrush = QtGui.QBrush(QtGui.QColor(119, 136, 153))
-        QtWidgets.QGraphicsScene.__init__(self, *args)
+        QtWidgets.QGraphicsScene.__init__(self, *args[1:])
 
     def drawBackground(self, painter, rect):
         painter.fillRect(rect, self.bgbrush)
@@ -67,7 +68,7 @@ class Scene(QtWidgets.QGraphicsScene):
 
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
-        drawRect = QtCore.QRectF(8, -424, 3840, 432)
+        drawRect = QtCore.QRectF(8, -424, self.zoneWidth, 432)
         painter.setPen(QtGui.QPen(QtGui.QColor(145, 200, 255, 176), 3))
         painter.drawRect(drawRect)
 

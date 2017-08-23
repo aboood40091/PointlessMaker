@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.items = []
 
-        self.scene = Scene(0, -428, 3856, 440, self)
+        self.scene = Scene(3840, 0, -428, 3856, 440, self)
         self.graphicsView.setScene(self.scene)
         self.graphicsView.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
 
@@ -64,6 +64,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             cdt.data(inb, pos)
 
             pos += cdt.size
+
+            self.scene = Scene(cdt.zoneWidth, 0, -428, 3856, 440, self)
+            self.graphicsView.setScene(self.scene)
+            self.graphicsView.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+
+            self.scene.selectionChanged.connect(self.handleSceneSelectionChanged)
 
             self.mode = cdt.mode.decode('utf-8')
             self.theme = cdt.theme
@@ -173,7 +179,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             if not direction:
                                 pi.setOffset(float(rx+16), float(ry))
                             else:
-                                pi.setOffset(float(rx), float(ry-16))
+                                pi.setOffset(float(rx-(obj.h-2)*16), float(ry-16))
                     pix = self.paintPipe(obj.w, obj.h, direction)
                     pi.setPixmap(pix)
                     item = pi
@@ -309,13 +315,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def paintPipe(self, w, h, direction):
-        pix = QtGui.QPixmap(w*16, h*16)
-        pix.fill(Qt.transparent)
-        painter = QtGui.QPainter(pix)
-
         top = True
 
         if direction in [0x40, 0x60]:
+            pix = QtGui.QPixmap(w*16, h*16)
+            pix.fill(Qt.transparent)
+            painter = QtGui.QPainter(pix)
+            
             ys = {0x60: list(reversed(range(h))), 0x40: range(h)}
 
             for y in ys[direction]:
@@ -334,10 +340,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 top = False
 
         elif direction in [0, 0x20]:
-            xs = {0: list(reversed(range(w))), 0x20: range(w)}
+            pix = QtGui.QPixmap(h*16, w*16)
+            pix.fill(Qt.transparent)
+            painter = QtGui.QPainter(pix)
+            
+            xs = {0: list(reversed(range(h))), 0x20: range(h)}
 
             for x in xs[direction]:
-                for y in range(h):
+                for y in range(w):
                     realY = y
                     while realY > 1:
                         realY -= 2

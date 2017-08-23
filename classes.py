@@ -48,6 +48,7 @@ class CourseData(struct.Struct):
          self.timer,
          self.scroll,
          self.unk8,
+         self.zoneWidth,
          self.unk9,
          self.unk10,
          self.unk11,
@@ -146,7 +147,6 @@ class CourseData(struct.Struct):
          self.unk104,
          self.unk105,
          self.unk106,
-         self.unk107,
          self.numObjects) = self.unpack_from(data, pos)
 
 
