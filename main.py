@@ -197,6 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     self.scene.update(obj.boundRect)
                     obj.setSelected(False)
+                    obj.delete()
                     
                     self.scene.removeItem(obj)
                     self.scene.update()

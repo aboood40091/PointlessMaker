@@ -76,71 +76,6 @@ class LevelEditorItem(QtWidgets.QGraphicsItem):
 
         return QtWidgets.QGraphicsItem.itemChange(self, change, value)
 
-    def getFullRect(self):
-        return self.boundRect.translated(self.pos())
-
-    def UpdateListItem(self, updateTooltipPreview=False):
-        if not hasattr(self, 'listitem'): return
-        if self.listitem is None: return
-
-        if updateTooltipPreview:
-            # It's just like Qt to make this overly complicated. XP
-            img = self.renderInLevelIcon()
-            byteArray = QtCore.QByteArray()
-            buf = QtCore.QBuffer(byteArray)
-            img.save(buf, 'PNG')
-            byteObj = bytes(byteArray)
-            b64 = base64.b64encode(byteObj).decode('utf-8')
-
-            self.listitem.setToolTip('<img src="data:image/png;base64,' + b64 + '" />')
-
-        self.listitem.setText(self.ListString())
-
-    def renderInLevelIcon(self):
-        # Constants:
-        # Maximum size of the preview (it will be shrunk if it exceeds this)
-        maxSize = QtCore.QSize(256, 256)
-        # Percentage of the size to use for margins
-        marginPct = 0.75
-        # Maximum margin (24 = 1 block)
-        maxMargin = 96
-
-        # Get the full bounding rectangle
-        br = self.getFullRect()
-
-        # Expand the rect to add extra margins around the edges
-        marginX = br.width() * marginPct
-        marginY = br.height() * marginPct
-        marginX = min(marginX, maxMargin)
-        marginY = min(marginY, maxMargin)
-        br.setX(br.x() - marginX)
-        br.setY(br.y() - marginY)
-        br.setWidth(br.width() + marginX)
-        br.setHeight(br.height() + marginY)
-
-        # Take the screenshot
-        ScreenshotImage = QtGui.QImage(br.width(), br.height(), QtGui.QImage.Format_ARGB32)
-        ScreenshotImage.fill(Qt.transparent)
-
-        RenderPainter = QtGui.QPainter(ScreenshotImage)
-        globals.mainWindow.scene.render(
-            RenderPainter,
-            QtCore.QRectF(0, 0, br.width(), br.height()),
-            br,
-        )
-        RenderPainter.end()
-
-        # Shrink it if it's too big
-        final = ScreenshotImage
-        if ScreenshotImage.width() > maxSize.width() or ScreenshotImage.height() > maxSize.height():
-            final = ScreenshotImage.scaled(
-                maxSize,
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation,
-            )
-
-        return final
-
     def boundingRect(self):
         return self.boundRect
 
@@ -259,9 +194,6 @@ class BorderItem(LevelEditorItem):
         self.dragstarty = -1
 
     def paint(self, painter, option, widget):
-        """
-        Paints the zone on screen
-        """
         # painter.setClipRect(option.exposedRect)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
