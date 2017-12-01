@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# MarioUnmaker
+# PointlessMaker
 # Version 0.2
-# Copyright © 2015 Treeki, 2017 Stella/AboodXD
+# Copyright © 2017 MasterVermilli0n/AboodXD
 
-# This file is part of MarioUnmaker.
+# This file is part of PointlessMaker.
 
-# MarioUnmaker is free software: you can redistribute it and/or modify
+# PointlessMaker is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-# MarioUnmaker is distributed in the hope that it will be useful,
+# PointlessMaker is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -161,3 +161,17 @@ objectNames = {0: "EditKuribo",
                67: "EditHalfHitWall",
                68: "EditSaw",
                69: "EditPlayer"}
+
+TilesetObjects = [
+    EditRengaBlock,
+    EditHatenaBlock,
+    EditHardBlock,
+    EditKumoBlock,
+    EditIceBlock,
+    EditGround,
+    EditCoin,
+    EditDokan,
+    EditGroundBox,
+    EditGroundGoal,
+    EditGroundStart,
+    ]
