@@ -33,7 +33,6 @@ from objects import *
 class LevelEditorItem(QtWidgets.QGraphicsItem):
     positionChanged = None
     autoPosChange = False
-    zMultiplied = False
 
     def __init__(self):
         super().__init__()

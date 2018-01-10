@@ -159,7 +159,6 @@ class Area:
             ry -= (obj.h - 1) * globals.TileWidth
             rw = obj.w * globals.TileWidth
             rh = obj.h * globals.TileWidth
-            zMultiplied = False
 
             if obj.objType in TilesetObjects:
                 if obj.objType == EditRengaBlock:
@@ -232,8 +231,6 @@ class Area:
 
             else:
                 item = RectItem(obj.objType, rx, ry, rz, rw, rh, obj.data)
-
-            item.zMultiplied = zMultiplied
 
             item.parentFlags = obj.parentFlags
             item.childFlags = obj.childFlags

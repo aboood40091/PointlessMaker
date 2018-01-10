@@ -170,7 +170,6 @@ class LevelViewWidget(QtWidgets.QGraphicsView):
             else:
                 item.parentFlags = 0x6000840
 
-            item.zMultiplied = False
             item.childFlags = 0x6000840
             item.childType = -1
             item.linkID = -1
