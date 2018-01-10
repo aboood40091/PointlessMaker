@@ -26,13 +26,14 @@ Qt = QtCore.Qt
 if not hasattr(QtWidgets.QGraphicsItem, 'ItemSendsGeometryChanges'):
     QtWidgets.QGraphicsItem.ItemSendsGeometryChanges = QtWidgets.QGraphicsItem.GraphicsItemFlag(0x800)
 
-from obj_names import *
 import globals
+from objects import *
 
 
 class LevelEditorItem(QtWidgets.QGraphicsItem):
     positionChanged = None
     autoPosChange = False
+    zMultiplied = False
 
     def __init__(self):
         super().__init__()
@@ -41,12 +42,49 @@ class LevelEditorItem(QtWidgets.QGraphicsItem):
     def __lt__(self, other):
         return (self.objx * 100000 + self.objy) < (other.objx * 100000 + other.objy)
 
+    def boundingRect(self):
+        return self.boundRect
+
+    def delete(self):
+        self.scene().update(self.x(), self.y(), self.boundRect.width(), self.boundRect.height())
+
+
+class PixmapItem(LevelEditorItem):
+    def __init__(self, type, x, y, z, w, h, pix, data):
+        super().__init__()
+
+        self.objType = type
+        self.objx = x
+        self.objy = y
+        self.objz = z
+        self.width = w
+        self.height = h
+        self.pix = pix
+        self.data = data
+        self.setZValue(self.objz)
+
+        self.realX = x
+        self.realY = y
+
+        self.setFlag(self.ItemIsMovable, True)
+        self.setFlag(self.ItemIsSelectable, True)
+        self.UpdateRects()
+
+    def SetType(self, type, pix, z):
+        self.objType = type
+        self.objz = z
+        self.pix = pix
+
+        self.setZValue(self.objz)
+        self.UpdateRects()
+        self.update()
+
     def itemChange(self, change, value):
-        if change == QtWidgets.QGraphicsRectItem.ItemPositionChange:
+        if change == super().ItemPositionChange:
             newpos = value
 
-            newpos.setX(int(int((newpos.x() + globals.TileWidth / 4) / (globals.TileWidth / 2)) * globals.TileWidth / 2))
-            newpos.setY(int(int((newpos.y() + globals.TileWidth / 4) / (globals.TileWidth / 2)) * globals.TileWidth / 2))
+            newpos.setX(int(newpos.x() / globals.TileWidth) * globals.TileWidth)
+            newpos.setY(int(newpos.y() / globals.TileWidth) * globals.TileWidth)
             
             x = newpos.x()
             y = newpos.y()
@@ -66,48 +104,12 @@ class LevelEditorItem(QtWidgets.QGraphicsItem):
             elif self.objy + y > 0:
                 newpos.setY(-self.objy)
 
-            if newpos.x() != 0:
-                self.realX = self.objx + newpos.x()
-
-            if newpos.y() != 0:
-                self.realY = self.objy + newpos.y()
+            self.realX = self.objx + newpos.x()
+            self.realY = self.objy + newpos.y()
 
             return newpos
 
-        return QtWidgets.QGraphicsItem.itemChange(self, change, value)
-
-    def boundingRect(self):
-        return self.boundRect
-
-    def delete(self):
-        self.scene().update(self.x(), self.y(), self.boundRect.width(), self.boundRect.height())
-
-
-class PixmapItem(LevelEditorItem):
-    def __init__(self, type, x, y, z, w, h, pix, data):
-        super().__init__()
-
-        self.type = type
-        self.objx = x
-        self.objy = y
-        self.objz = z
-        self.width = w
-        self.height = h
-        self.pix = pix
-        self.data = data
-        self.setZValue(self.objz)
-
-        self.realX = x
-        self.realY = y
-
-        self.setFlag(self.ItemIsMovable, True)
-        self.setFlag(self.ItemIsSelectable, True)
-        self.UpdateRects()
-
-    def SetType(self, type, pix):
-        self.type = type
-        self.pix = pix
-        self.update()
+        return super().itemChange(change, value)
 
     def paint(self, painter, option, widget):
         painter.save()
@@ -133,7 +135,7 @@ class RectItem(LevelEditorItem):
         super().__init__()
         self.setZValue(z)
 
-        self.type = type
+        self.objType = type
         self.objx = x
         self.objy = y
         self.objz = z
@@ -150,6 +152,38 @@ class RectItem(LevelEditorItem):
 
         self.font = QtGui.QFont('Tahoma', 7 * (globals.TileWidth / 16))
 
+    def itemChange(self, change, value):
+        if change == super().ItemPositionChange:
+            newpos = value
+
+            newpos.setX(int(newpos.x() / (globals.TileWidth // 2)) * globals.TileWidth // 2)
+            newpos.setY(int(newpos.y() / (globals.TileWidth // 2)) * globals.TileWidth // 2)
+            
+            x = newpos.x()
+            y = newpos.y()
+
+            maxX = 240 * globals.TileWidth
+            minY = -27 * globals.TileWidth
+
+            if self.objx + x < 0:
+                newpos.setX(-self.objx)
+
+            elif self.objx + x > maxX:
+                newpos.setX(maxX - self.objx)
+
+            if self.objy + y < minY:
+                newpos.setY(minY - self.objy)
+
+            elif self.objy + y > 0:
+                newpos.setY(-self.objy)
+
+            self.realX = self.objx + newpos.x()
+            self.realY = self.objy + newpos.y()
+
+            return newpos
+
+        return super().itemChange(change, value)
+
     def paint(self, painter, option, widget):
         painter.setClipRect(option.exposedRect)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -165,7 +199,7 @@ class RectItem(LevelEditorItem):
         painter.drawRoundedRect(self.itemRect, 4 * (globals.TileWidth / 16), 4 * (globals.TileWidth / 16))
 
         painter.setFont(self.font)
-        painter.drawText(self.itemRect, Qt.AlignCenter, str(self.type))
+        painter.drawText(self.itemRect, Qt.AlignCenter, str(self.objType))
 
     def UpdateRects(self):
         self.prepareGeometryChange()
@@ -209,6 +243,3 @@ class BorderItem(LevelEditorItem):
         self.drawRect = QtCore.QRectF(self.objx + 1 * (globals.TileWidth / 16), self.objy + 1 * (globals.TileWidth / 16),
                                       self.width - 2 * (globals.TileWidth / 16), self.height - 2 * (globals.TileWidth / 16))
         self.boundRect = QtCore.QRectF(self.objx, self.objy, self.width, self.height)
-
-    def itemChange(self, change, value):
-        return QtWidgets.QGraphicsItem.itemChange(self, change, value)

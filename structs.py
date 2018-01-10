@@ -24,8 +24,9 @@ import struct
 
 
 class CourseData(struct.Struct):
-    def __init__(self):
-        super().__init__('>4x2I4xH6BQB7x66s2sx3BH2BI104s12xI')
+    def __init__(self, bom):
+        super().__init__(bom + '4x2I4xH6BQB7x66s2sx3BH2BI104s12xI')
+        self.bom = bom
 
     def data(self, data, pos):
         (self.version,
@@ -51,13 +52,15 @@ class CourseData(struct.Struct):
          self.miiData,
          self.numObjects) = self.unpack_from(data, pos)
 
-        self.mii = MiiData(self.miiData)
+        self.mii = MiiData()
+        self.mii.data(self.miiData, self.bom)
 
 
 class MiiData(struct.Struct):
-    def __init__(self, miiData):
+    def __init__(self):
         super().__init__('<IQI6s2xH20sH16sB7x20sI')
 
+    def data(self, miiData, bom):
         (self.ID,
          self.sysID,
          self.date,
@@ -71,24 +74,22 @@ class MiiData(struct.Struct):
          self.unk2) = self.unpack_from(miiData, 0)
 
         (self.country,
-         self.uploadFlag) = struct.unpack('>2I', miiData[0x60:])
+         self.uploadFlag) = struct.unpack(bom + '2I', miiData[0x60:])
 
         self.name = self.u16BytestrByteSwap(self.name)
 
     def u16BytestrByteSwap(self, bytestr):
-        i = 0
         swapped = bytearray()
-        while i < len(self.name):
-            swapped.append(bytestr[i+1])
+        for i in range(0, len(self.name), 2):
+            swapped.append(bytestr[i + 1])
             swapped.append(bytestr[i])
-            i += 2
 
         return bytes(swapped)
 
 
 class Object(struct.Struct):
-    def __init__(self):
-        super().__init__('>2Ih2b3I2b2h2b')
+    def __init__(self, bom):
+        super().__init__(bom + '2Ih2b3I2b2h2b')
 
     def data(self, data, pos):
         (self.x,

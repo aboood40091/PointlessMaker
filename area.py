@@ -20,6 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 import zlib
 
 from PyQt5 import QtGui
@@ -27,22 +28,26 @@ from PyQt5.QtCore import Qt
 
 import globals
 from items import PixmapItem, RectItem
-from obj_names import *
-from classes import *
+from objects import *
+from structs import *
 
 
 class Area:
-    def __init__(self, inb, cdt):
+    def __init__(self, inb, cdt, bom):
         self.objects = []
 
         for attr in dir(cdt):
             if not attr.startswith('__') and not callable(getattr(cdt, attr)):
                 exec('self.%s = cdt.%s' % (attr, attr))
 
+        self.bom = bom
+
         mode = self.mode.decode('utf-8')
         theme = self.theme
 
         self.loadTileset(mode, theme)
+
+        globals.mainWindow.objPicker.model.loadObjects()
         
         self.objectsBlock = inb[0xF0:0x145F0]
         self.effectsBlock = inb[0x145F0:0x15000]
@@ -83,32 +88,78 @@ class Area:
 
                 globals.Tiles.append(bmp)
                 sourcex += width
+
             sourcex = 0
             sourcey += width
 
     def loadObjects(self):
-        self.numGoundBoxes = 0
-        zMults = []
-
-        pos = 0
-        for i in range(self.numObjects):
-            obj = Object()
+        pos = (self.numObjects - 1) * 0x20
+        for _ in range(self.numObjects):
+            obj = Object(self.bom)
             obj.data(self.objectsBlock, pos)
-
-            pos += obj.size
+            pos -= 0x20
 
             rx = obj.x / 160 * globals.TileWidth
             ry = -obj.y / 160 * globals.TileWidth
 
             # Oh, this game has layers BTW
-            # Probably a layer for each object
-            # I'll be damned if I add support for layers now
-            # Will probably wait for my holiday first
-            rz = -obj.z / 16 * globals.TileWidth
+            rz = obj.z
+
+            if 0 <= rz < 11740:
+                rz = 0
+
+            elif 11740 <= rz < 13000:
+                rz = 11740
+
+            elif 13000 <= rz < 23010:
+                rz = 13000
+
+            elif 23010 <= rz < 44000:
+                rz = 23010
+
+            elif 44000 <= rz < 48010:
+                rz = 44000
+
+            elif 48010 <= rz < 59990:
+                rz = 48010
+
+            elif 59990 <= rz < 62600:
+                rz = 59990
+
+            elif 62600 <= rz < 72140:
+                rz = 62600
+
+            elif 72140 <= rz < 92670:
+                rz = 72140
+
+            elif 92670 <= rz < 93540:
+                rz = 92670
+
+            elif 93540 <= rz < 4294897396:
+                rz = 93540
+
+            elif 4294897396 <= rz < 4294907296:
+                rz = 4294897396
+
+            elif 4294907296 <= rz < 4294910396:
+                rz = 4294907296
+
+            elif 4294910396 <= rz < 4294910496:
+                rz = 4294910396
+
+            elif 4294910496 <= rz < 4294911506:
+                rz = 4294910496
+
+            elif 4294911506 <= rz < 4294916516:
+                rz = 4294911506
+
+            else:
+                rz = 4294916516
 
             ry -= (obj.h - 1) * globals.TileWidth
             rw = obj.w * globals.TileWidth
             rh = obj.h * globals.TileWidth
+            zMultiplied = False
 
             if obj.objType in TilesetObjects:
                 if obj.objType == EditRengaBlock:
@@ -161,24 +212,7 @@ class Area:
                     type_ = ((obj.parentFlags >> 16) & 0xF) // 4
                     pix, rw, rh = globals.mainWindow.paintGroundBox(obj.w, obj.h, type_)
 
-                    # Get a proper z value
-                    ## Get the z multiplier
-                    zMult = 1 / ((obj.parentFlags & 0xF) + 4)
-
-                    ## Make the z value lower than any other item
-                    rz -= 0xFFFFFFFF
-                    rz *= 16
-
-                    ## Multiply by the z multiplier
-                    rz *= zMult
-
-                    ## Some shiz that I don't care about explaining
-                    self.numGoundBoxes += 1
-                    if zMult in zMults:
-                        rz *= self.numGoundBoxes
-
-                    else:
-                        zMults.append(zMult)
+                    rz -= 0x100000000
 
                 elif obj.objType == EditGroundGoal:
                     pix, rw, rh = globals.mainWindow.paintGroundGoal(obj.w, obj.h)
@@ -186,14 +220,23 @@ class Area:
                 elif obj.objType == EditGroundStart:
                     pix, rw, rh = globals.mainWindow.paintGroundStart(obj.w, obj.h)
 
+                # Snap to grid
+                rx -= globals.TileWidth // 2
+                ry -= globals.TileWidth // 2
+                rx = math.ceil(rx / globals.TileWidth) * globals.TileWidth
+                ry = math.ceil(ry / globals.TileWidth) * globals.TileWidth
+                rx += globals.TileWidth // 2
+                ry += globals.TileWidth // 2
+
                 item = PixmapItem(obj.objType, rx, ry, rz, rw, rh, pix, obj.data)
 
             else:
                 item = RectItem(obj.objType, rx, ry, rz, rw, rh, obj.data)
 
+            item.zMultiplied = zMultiplied
+
             item.parentFlags = obj.parentFlags
             item.childFlags = obj.childFlags
-            item.objType = obj.objType
             item.childType = obj.childType
             item.linkID = obj.linkID
             item.eIndex = obj.eIndex
@@ -202,6 +245,8 @@ class Area:
 
             self.objects.append(item)
             globals.mainWindow.scene.addItem(item)
+
+        self.objects = list(reversed(self.objects))
 
     def save(self):
         self.saveObjectsBlock()
@@ -247,16 +292,47 @@ class Area:
         buffer = bytearray()
 
         objects_count = 0
-        for obj in globals.Area.objects:
-            if obj.type in [EditDokan, EditGroundBox, EditGroundGoal, EditGroundStart]:  # can't save those yet ;(
-                continue
+        numGoundBoxes = 0
+        for obj in reversed(self.objects):
+            rw, rh, rx, ry, rz = obj.width, obj.height, obj.realX, obj.realY, obj.objz
 
-            x = obj.realX * 160 / globals.TileWidth
-            y = -obj.realY * 160 / globals.TileWidth
-            z = -obj.objz * 16 / globals.TileWidth
-            y -= (obj.height - globals.TileWidth) * 160 / globals.TileWidth
-            w = obj.width // globals.TileWidth
-            h = obj.height // globals.TileWidth
+            if obj.objType == EditDokan:
+                direction = obj.parentFlags & 0x60
+
+                if direction in [0x40, 0x60]:
+                    rw, rh = (obj.width, obj.height)
+
+                else:
+                    rw, rh = (obj.height, obj.width)
+
+                if direction != 0x40:
+                    ry -= obj.height - globals.TileWidth
+
+                    if direction == 0x60:
+                        rx -= globals.TileWidth
+
+                    else:
+                        rx -= rw - globals.TileWidth
+
+                        if not direction:
+                            rx += globals.TileWidth
+
+                        else:
+                            rx -= rh - globals.TileWidth * 2
+                            ry -= globals.TileWidth
+
+            elif obj.objType == EditGroundBox:
+                rz += 0x100000000
+
+            elif obj.objType in [EditGroundGoal, EditGroundStart]:
+                rw += globals.TileWidth * 3
+
+            x = rx * 160 / globals.TileWidth
+            y = -ry * 160 / globals.TileWidth
+            z = rz
+            y -= (rh - globals.TileWidth) * 160 / globals.TileWidth
+            w = rw // globals.TileWidth
+            h = rh // globals.TileWidth
 
             x = int(x)
             y = int(y)

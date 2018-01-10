@@ -20,19 +20,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import zlib
 import sys
+import zlib
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 Qt = QtCore.Qt
 
 from area import *
-from classes import *
-from items import *
-from obj_names import *
-from widgets import *
-
 import globals
+from items import *
+from objects import *
+from structs import *
+from widgets import *
 
 EditorVersion = '0.2'
 
@@ -43,17 +42,23 @@ class MainWindow(QtWidgets.QMainWindow):
         Helper function to create an action
         From Miyamoto
         """
-
         if icon is not None:
             act = QtWidgets.QAction(icon, text, self)
+
         else:
             act = QtWidgets.QAction(text, self)
 
-        if shortcut is not None: act.setShortcut(shortcut)
-        if statustext is not None: act.setStatusTip(statustext)
+        if shortcut is not None:
+            act.setShortcut(shortcut)
+
+        if statustext is not None:
+            act.setStatusTip(statustext)
+
         if toggle:
             act.setCheckable(True)
-        if function is not None: act.triggered.connect(function)
+
+        if function is not None:
+            act.triggered.connect(function)
 
         self.actions[shortname] = act
 
@@ -65,7 +70,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.UpdateFlag = False
         self.selObj = None
         self.CurrentSelection = []
-        self.keylist = []
 
         self.scene = Scene(0, -(27 * globals.TileWidth), 241 * globals.TileWidth, 28 * globals.TileWidth, self)
         self.scene.setItemIndexMethod(QtWidgets.QGraphicsScene.NoIndex)
@@ -76,12 +80,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(self.graphicsView)
 
+        self.selAllShort = QtWidgets.QShortcut(QtGui.QKeySequence.SelectAll, self)
+        self.selAllShort.activated.connect(self.SelectAll)
+
+        self.gridShort = QtWidgets.QShortcut(QtGui.QKeySequence('G'), self)
+        self.gridShort.activated.connect(self.ToggleGrid)
+
     def __init2__(self):
         self.createMenubar()
-
-        filename = QtWidgets.QFileDialog.getOpenFileName(self, "Open Level", '', 'Level file (*.cdt)')[0]
-        if filename:
-            self.LoadLevel(str(filename))
+        self.SetupDocksAndPanels()
+        self.HandleOpenFromFile()
 
     actions = {}
 
@@ -89,8 +97,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.CreateAction('openfromfile', self.HandleOpenFromFile, None,
                           'Open Level by File...', 'Open a level based on its filename',
                           QtGui.QKeySequence('Ctrl+Shift+O'))
-        self.CreateAction('save', self.HandleSaveAs, None, 'Save Level As',
-                          'Save the level with a new filename', QtGui.QKeySequence.Save)
+        self.CreateAction('save', self.HandleSaveAs, None, 'Save Level',
+                          'Save the level back to the archive file', QtGui.QKeySequence.Save)
+        self.CreateAction('screenshot', self.HandleScreenshot, None, 'Level Screenshot...',
+                          'Take a full size screenshot of your level for you to share', QtGui.QKeySequence('Ctrl+Alt+S'))
 
 
         menubar = QtWidgets.QMenuBar()
@@ -100,20 +110,46 @@ class MainWindow(QtWidgets.QMainWindow):
         fmenu.addAction(self.actions['openfromfile'])
         fmenu.addSeparator()
         fmenu.addAction(self.actions['save'])
+        fmenu.addSeparator()
+        fmenu.addAction(self.actions['screenshot'])
 
-    @QtCore.pyqtSlot()
+    def SetupDocksAndPanels(self):
+        dock = QtWidgets.QDockWidget('Modify Selected Object Properties', self)
+        dock.setVisible(False)
+        dock.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        dock.setObjectName('objecteditor')
+
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        dock.setFloating(True)
+
+        # create the palette
+        dock = QtWidgets.QDockWidget('Palette', self)
+        dock.setFeatures(
+            QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable | QtWidgets.QDockWidget.DockWidgetClosable)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        dock.setObjectName('palette')  # needed for the state to save/restore correctly
+
+        self.creationDock = dock
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        dock.setVisible(True)
+
+        self.objPicker = ObjectPickerWidget()
+        self.objPicker.ObjChanged.connect(self.ObjectChoiceChanged)
+        self.objPicker.ObjReplace.connect(self.ObjectReplace)
+        dock.setWidget(self.objPicker)
+
     def HandleOpenFromFile(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(self, "Open Level", '', 'Level file (*.cdt)')[0]
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, "Open Level", '', 'Course data file (*.cdt)')[0]
         if filename:
             self.LoadLevel(str(filename))
             return True
 
         return
 
-    @QtCore.pyqtSlot()
     def HandleSaveAs(self):
         if globals.LevelLoaded:
-            filename = QtWidgets.QFileDialog.getSaveFileName(self, "Save Level As", '', 'Level file (*.cdt)')[0]
+            filename = QtWidgets.QFileDialog.getSaveFileName(self, "Save Level As", '', 'Wii U Course data file (*.cdt)')[0]
             if filename:
                 courseBuffer = globals.Area.save()
                 with open(filename, "wb+") as out:
@@ -123,17 +159,54 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return
 
+    def HandleScreenshot(self):
+        if globals.LevelLoaded:
+            fn = QtWidgets.QFileDialog.getSaveFileName(self, "Save Screenshot", '/untitled.png',
+                                                       'PNG file (*.png)')[0]
+            if fn == '': return
+            fn = str(fn)
+
+            areaWidth = globals.Area.areaWidth * globals.TileWidth / 16
+
+            ScreenshotImage = QtGui.QImage(areaWidth, 27 * globals.TileWidth, QtGui.QImage.Format_ARGB32)
+            ScreenshotImage.fill(Qt.transparent)
+
+            RenderPainter = QtGui.QPainter(ScreenshotImage)
+            self.scene.render(RenderPainter, QtCore.QRectF(0, 0, areaWidth, 27 * globals.TileWidth),
+                              QtCore.QRectF(0.5 * globals.TileWidth,
+                                            -26.5 * globals.TileWidth,
+                                            areaWidth,
+                                            27 * globals.TileWidth))
+            RenderPainter.end()
+
+            ScreenshotImage.save(fn, 'PNG', 50)
+
+    def SelectAll(self):
+        paintRect = QtGui.QPainterPath()
+        paintRect.addRect(0, -(26.5 * globals.TileWidth), 241 * globals.TileWidth, 27.5 * globals.TileWidth)
+        self.scene.setSelectionArea(paintRect)
+
+    def ToggleGrid(self):
+        globals.GridShown = not globals.GridShown
+        self.scene.update()
+
     def LoadLevel(self, filename):
         with open(filename, "rb") as inf:
             inb = inf.read()
 
-        cdt = CourseData()
-        cdt.data(inb, 0)
-
         checksum = zlib.crc32(inb[16:]) % (1 << 32)
-        if checksum != cdt.checksum:
+        if inb[8:12] == checksum.to_bytes(4, "big"):
+            bom = '>'
+
+        elif inb[8:12] == checksum.to_bytes(4, "little"):
+            bom = '<'
+
+        else:
             print("Invalid checksum! Level data seems to be corrupted...")
             return
+
+        cdt = CourseData(bom)
+        cdt.data(inb, 0)
 
         self.scene.clearSelection()
         self.CurrentSelection = []
@@ -145,7 +218,7 @@ class MainWindow(QtWidgets.QMainWindow):
         border = BorderItem(0.5 * globals.TileWidth, -26.5 * globals.TileWidth, areaWidth, 27 * globals.TileWidth)
         self.scene.addItem(border)
 
-        globals.Area = Area(inb, cdt)
+        globals.Area = Area(inb, cdt, bom)
 
         globals.LevelLoaded = True
 
@@ -172,58 +245,190 @@ class MainWindow(QtWidgets.QMainWindow):
         self.CurrentSelection = selitems
 
     def keyPressEvent(self, event):
-        self.keylist.append(event.key())
+        if event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
+            sel = self.scene.selectedItems()
+            for obj in sel:
+                index = globals.Area.objects.index(obj)
+                del globals.Area.objects[index]
 
-        if Qt.Key_Control in self.keylist and Qt.Key_A in self.keylist:
-            paintRect = QtGui.QPainterPath()
-            paintRect.addRect(0, -(26.5 * globals.TileWidth), 241 * globals.TileWidth, 27.5 * globals.TileWidth)
-            self.scene.setSelectionArea(paintRect)
+                obj.delete()
+                obj.setSelected(False)
+                self.scene.removeItem(obj)
+
+            event.accept()
+
+        elif event.key() == Qt.Key_L:
+            sel = self.scene.selectedItems()
+            for obj in sel:
+                if isinstance(obj, PixmapItem) or isinstance(obj, Area):
+                    continue
+
+                obj.height += globals.TileWidth
+
+                oldrect = obj.boundRect
+                newrect = QtCore.QRectF(obj.x(), obj.y(), obj.width, obj.height)
+                updaterect = oldrect.united(newrect)
+
+                obj.update(updaterect)
+
+                obj.UpdateRects()
+                self.scene.update(updaterect)
 
             event.accept()
 
-            return
-        
-        elif event.key() in [Qt.Key_Delete, Qt.Key_Backspace]:
-            try:
-                sel = self.scene.selectedItems()
+        elif event.key() == Qt.Key_K:
+            sel = self.scene.selectedItems()
+            for obj in sel:
+                if isinstance(obj, PixmapItem) or isinstance(obj, Area):
+                    continue
 
-            except RuntimeError:
-                return
+                obj.height -= globals.TileWidth
 
-            if len(sel) > 0:
-                for obj in sel:
-                    index = globals.Area.objects.index(obj)
-                    del globals.Area.objects[index]
+                oldrect = obj.boundRect
+                newrect = QtCore.QRectF(obj.x(), obj.y(), obj.width, obj.height)
+                updaterect = oldrect.united(newrect)
 
-                    self.scene.update(obj.boundRect)
-                    obj.setSelected(False)
-                    obj.delete()
-                    
-                    self.scene.removeItem(obj)
-                    self.scene.update()
-
-                    del obj
-
-                event.accept()
-                return
-
-        elif event.key() == Qt.Key_G:
-            globals.GridShown = not globals.GridShown
-            self.scene.update()
+                obj.UpdateRects()
+                self.scene.update(updaterect)
 
             event.accept()
+
+        else:
+            super().keyPressEvent(event)
+
+    @QtCore.pyqtSlot(int)
+    def ObjectChoiceChanged(self, type_):
+        globals.CurrentObject = type_
+
+    @QtCore.pyqtSlot(int)
+    def ObjectReplace(self, type_):
+        items = self.scene.selectedItems()
+        type_obj = PixmapItem
+
+        parentFlags = 0x6000840
+
+        if type_ == 0:
+            type_ = EditRengaBlock
+
+        elif type_ == 1:
+            type_ = EditHatenaBlock
+
+        elif type_ == 2:
+            type_ = EditHardBlock
+
+        elif type_ == 3:
+            type_ = EditKumoBlock
+
+        elif type_ == 4:
+            type_ = EditIceBlock
+
+        elif 4 < type_ < 76:
+            data = type_ - 5
+            type_ = EditGround
+
+        elif type_ == 76:
+            type_ = EditCoin
+
+        elif type_ == 77:
+            parentFlags |= 0x4
+            type_ = EditCoin
+
+        elif type_ == 78:
+            type_ = EditDokan
+
+        elif type_ == 79:
+            parentFlags = 0x6000800
+            type_ = EditDokan
+
+        elif type_ == 80:
+            parentFlags = 0x6000860
+            type_ = EditDokan
+
+        elif type_ == 81:
+            parentFlags = 0x6000820
+            type_ = EditDokan
+
+        elif type_ == 82:
+            type_ = EditGroundBox
+
+        elif type_ == 83:
+            parentFlags |= 0x40000
+            type_ = EditGroundBox
+
+        elif type_ == 84:
+            parentFlags |= 0x80000
+            type_ = EditGroundBox
+
+        elif type_ == 85:
+            type_ = EditGroundGoal
+
+        elif type_ == 86:
+            type_ = EditGroundStart
+
+        else:
             return
 
-        super().keyPressEvent(event)
+        for x in items:
+            if isinstance(x, type_obj) and x.type != type_:
+                for z in objectsZValues:
+                    if type_ in objectsZValues[z]:
+                        break
 
-    def keyReleaseEvent(self, event):
-        try:
-            del self.keylist[-1]
+                if type_ == EditRengaBlock:
+                    pix = globals.Tiles[1]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
 
-        except IndexError:
-            pass
+                elif type_ == EditHatenaBlock:
+                    pix = globals.Tiles[2]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
 
-        super().keyReleaseEvent(event)
+                elif type_ == EditHardBlock:
+                    pix = globals.Tiles[6]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
+
+                elif type_ == EditKumoBlock:
+                    pix = globals.Tiles[102]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
+
+                elif type_ == EditIceBlock:
+                    pix = globals.Tiles[120]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
+
+                elif type_ == EditGround:
+                    pix = globals.Tiles[184 + data]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
+                    x.data = data
+
+                elif type_ == EditCoin and not parentFlags & 0x4:
+                    pix = globals.Tiles[7]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
+
+                elif type_ == EditCoin and parentFlags & 0x4 == 4:
+                    pix = globals.Tiles[256]
+                    x.width = globals.TileWidth
+                    x.height = globals.TileWidth
+
+                elif type_ == EditDokan:
+                    pix, x.width, x.height = globals.mainWindow.paintPipe(2, max(2, x.height // globals.TileWidth), parentFlags & 0x60)
+
+                elif type_ == EditGroundBox:
+                    pix, x.width, x.height = globals.mainWindow.paintGroundBox(max(3, x.width // globals.TileWidth), max(3, x.height // globals.TileWidth), ((parentFlags >> 16) & 0xF) // 4)
+
+                elif type_ == EditGroundGoal:
+                    pix, x.width, x.height = globals.mainWindow.paintGroundGoal(max(13, x.width // globals.TileWidth + 3), max(2, x.height // globals.TileWidth))
+
+                elif type_ == EditGroundStart:
+                    pix, x.width, x.height = globals.mainWindow.paintGroundStart(max(8, x.width // globals.TileWidth + 3), max(2, x.height // globals.TileWidth))
+
+                x.parentFlags = parentFlags
+                x.SetType(type_, pix, z)
 
     def paintPipe(self, w, h, direction):
         pix = QtGui.QPixmap()
@@ -237,7 +442,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pix.fill(Qt.transparent)
             painter = QtGui.QPainter(pix)
 
-            ys = {0x60: list(reversed(range(h))), 0x40: range(h)}
+            ys = {0x60: range(h - 1, -1, -1), 0x40: range(h)}
 
             for y in ys[direction]:
                 for x in range(w):
@@ -264,7 +469,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pix.fill(Qt.transparent)
             painter = QtGui.QPainter(pix)
 
-            xs = {0: list(reversed(range(h))), 0x20: range(h)}
+            xs = {0: range(h - 1, -1, -1), 0x20: range(h)}
 
             for x in xs[direction]:
                 for y in range(w):
@@ -378,9 +583,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         edge = True
 
-        for x in list(reversed(range(w))):
+        for x in range(w - 1, -1, -1):
             for y in range(h):
-                if edge:
+                if x == w - 1:
                     if not y:
                         painter.drawPixmap(globals.TileWidth * x, globals.TileWidth * y, globals.Tiles[122])
 
@@ -407,11 +612,9 @@ class MainWindow(QtWidgets.QMainWindow):
         pix.fill(Qt.transparent)
         painter = QtGui.QPainter(pix)
 
-        edge = True
-
         for x in range(w):
             for y in range(h):
-                if edge:
+                if not x:
                     if not y:
                         painter.drawPixmap(globals.TileWidth * x, globals.TileWidth * y, globals.Tiles[123])
 
@@ -424,8 +627,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     else:
                         painter.drawPixmap(globals.TileWidth * x, globals.TileWidth * y, globals.Tiles[140])
-
-            edge = False
 
         painter.end()
 

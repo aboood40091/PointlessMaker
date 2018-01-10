@@ -24,3 +24,6 @@ LevelLoaded = False
 GridShown = True
 Tiles = []
 TileWidth = 24
+
+CurrentPaintType = -1
+CurrentObject = -1
