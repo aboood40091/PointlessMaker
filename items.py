@@ -31,9 +31,6 @@ from objects import *
 
 
 class LevelEditorItem(QtWidgets.QGraphicsItem):
-    positionChanged = None
-    autoPosChange = False
-
     def __init__(self):
         super().__init__()
         self.setFlag(self.ItemSendsGeometryChanges, True)

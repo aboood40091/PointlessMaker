@@ -89,7 +89,7 @@ class MiiData(struct.Struct):
 
 class Object(struct.Struct):
     def __init__(self, bom):
-        super().__init__(bom + '2Ih2b3I2b2h2b')
+        super().__init__(bom + '2Ih2B3I2b2h2b')
 
     def data(self, data, pos):
         (self.x,

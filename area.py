@@ -250,7 +250,7 @@ class Area:
 
         courseBuffer = bytearray()
 
-        courseStruct = CourseData()
+        courseStruct = CourseData('>')
         courseBuffer += courseStruct.pack(
             self.version,
             0,  # to be calculated and replaced later on
@@ -303,20 +303,20 @@ class Area:
                     rw, rh = (obj.height, obj.width)
 
                 if direction != 0x40:
-                    ry -= obj.height - globals.TileWidth
+                    ry -= rh - globals.TileWidth
 
                     if direction == 0x60:
-                        rx -= globals.TileWidth
+                        rx += globals.TileWidth
 
                     else:
-                        rx -= rw - globals.TileWidth
+                        rx += rw - globals.TileWidth
 
                         if not direction:
-                            rx += globals.TileWidth
+                            rx -= globals.TileWidth
 
                         else:
-                            rx -= rh - globals.TileWidth * 2
-                            ry -= globals.TileWidth
+                            rx += rh - (2 * globals.TileWidth)
+                            ry += globals.TileWidth
 
             elif obj.objType == EditGroundBox:
                 rz += 0x100000000
@@ -352,7 +352,7 @@ class Area:
             print(type(obj.cTID))
             """
 
-            objStruct = Object()
+            objStruct = Object('>')
             buffer += objStruct.pack(
                 x,
                 z,

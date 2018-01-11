@@ -257,36 +257,84 @@ class MainWindow(QtWidgets.QMainWindow):
 
             event.accept()
 
-        elif event.key() == Qt.Key_L:
+        elif event.key() in [Qt.Key_S, Qt.Key_W, Qt.Key_D, Qt.Key_A]:
             sel = self.scene.selectedItems()
             for obj in sel:
-                if isinstance(obj, PixmapItem) or isinstance(obj, Area):
+                if isinstance(obj, Area):
                     continue
 
-                obj.height += globals.TileWidth
+                if obj.objType == EditDokan and obj.parentFlags & 0x60 not in [0x40, 0x60]:
+                    w = obj.height
+                    h = obj.width
+
+                    obj.height, obj.width = h, w
+
+                # Increase the height
+                if event.key() == Qt.Key_S:
+                    obj.height += globals.TileWidth
+
+                    if obj.objType in MaxDimensions:
+                        if obj.height > MaxDimensions[obj.objType][1] * globals.TileWidth:
+                            obj.height = MaxDimensions[obj.objType][1] * globals.TileWidth
+
+                    else:
+                        if obj.height > 255 * globals.TileWidth:
+                            obj.height = 255 * globals.TileWidth
+
+                # Decrease the height
+                elif event.key() == Qt.Key_W:
+                    obj.height -= globals.TileWidth
+
+                    if obj.objType in MinDimensions:
+                        if obj.height < MinDimensions[obj.objType][1] * globals.TileWidth:
+                            obj.height = MinDimensions[obj.objType][1] * globals.TileWidth
+
+                    else:
+                        if obj.height < globals.TileWidth:
+                            obj.height = globals.TileWidth
+
+                # Increase the width
+                elif event.key() == Qt.Key_D:
+                    obj.width += globals.TileWidth
+
+                    if obj.objType in MaxDimensions:
+                        if obj.width > MaxDimensions[obj.objType][0] * globals.TileWidth:
+                            obj.width = MaxDimensions[obj.objType][0] * globals.TileWidth
+
+                    else:
+                        if obj.width > 255 * globals.TileWidth:
+                            obj.width = 255 * globals.TileWidth
+
+                # Decrease the width
+                elif event.key() == Qt.Key_A:
+                    obj.width -= globals.TileWidth
+
+                    if obj.objType in MinDimensions:
+                        if obj.width < MinDimensions[obj.objType][0] * globals.TileWidth:
+                            obj.width = MinDimensions[obj.objType][0] * globals.TileWidth
+
+                    else:
+                        if obj.width < globals.TileWidth:
+                            obj.width = globals.TileWidth
+
+                # Update the pixmaps which need updating
+                if obj.objType == EditDokan:
+                    obj.pix, obj.width, obj.height = self.paintPipe(2, obj.height // globals.TileWidth, obj.parentFlags & 0x60)
+
+                elif obj.objType == EditGroundBox:
+                    obj.pix = self.paintGroundBox(obj.width // globals.TileWidth, obj.height // globals.TileWidth, ((obj.parentFlags >> 16) & 0xF) // 4)[0]
+
+                elif obj.objType == EditGroundGoal:
+                    obj.pix = self.paintGroundGoal(obj.width // globals.TileWidth + 3, obj.height // globals.TileWidth)[0]
+
+                elif obj.objType == EditGroundStart:
+                    obj.pix = self.paintGroundStart(obj.width // globals.TileWidth + 3, obj.height // globals.TileWidth)[0]
 
                 oldrect = obj.boundRect
                 newrect = QtCore.QRectF(obj.x(), obj.y(), obj.width, obj.height)
                 updaterect = oldrect.united(newrect)
 
                 obj.update(updaterect)
-
-                obj.UpdateRects()
-                self.scene.update(updaterect)
-
-            event.accept()
-
-        elif event.key() == Qt.Key_K:
-            sel = self.scene.selectedItems()
-            for obj in sel:
-                if isinstance(obj, PixmapItem) or isinstance(obj, Area):
-                    continue
-
-                obj.height -= globals.TileWidth
-
-                oldrect = obj.boundRect
-                newrect = QtCore.QRectF(obj.x(), obj.y(), obj.width, obj.height)
-                updaterect = oldrect.united(newrect)
 
                 obj.UpdateRects()
                 self.scene.update(updaterect)
@@ -416,16 +464,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     x.height = globals.TileWidth
 
                 elif type_ == EditDokan:
-                    pix, x.width, x.height = globals.mainWindow.paintPipe(2, max(2, x.height // globals.TileWidth), parentFlags & 0x60)
+                    pix, x.width, x.height = self.paintPipe(2, max(2, x.height // globals.TileWidth), parentFlags & 0x60)
 
                 elif type_ == EditGroundBox:
-                    pix, x.width, x.height = globals.mainWindow.paintGroundBox(max(3, x.width // globals.TileWidth), max(3, x.height // globals.TileWidth), ((parentFlags >> 16) & 0xF) // 4)
+                    pix, x.width, x.height = self.paintGroundBox(max(3, x.width // globals.TileWidth), max(3, x.height // globals.TileWidth), ((parentFlags >> 16) & 0xF) // 4)
+                    z -= 0x100000000
 
                 elif type_ == EditGroundGoal:
-                    pix, x.width, x.height = globals.mainWindow.paintGroundGoal(max(13, x.width // globals.TileWidth + 3), max(2, x.height // globals.TileWidth))
+                    pix, x.width, x.height = self.paintGroundGoal(max(13, x.width // globals.TileWidth + 3), max(2, x.height // globals.TileWidth))
 
                 elif type_ == EditGroundStart:
-                    pix, x.width, x.height = globals.mainWindow.paintGroundStart(max(8, x.width // globals.TileWidth + 3), max(2, x.height // globals.TileWidth))
+                    pix, x.width, x.height = self.paintGroundStart(max(8, x.width // globals.TileWidth + 3), max(2, x.height // globals.TileWidth))
 
                 x.parentFlags = parentFlags
                 x.SetType(type_, pix, z)

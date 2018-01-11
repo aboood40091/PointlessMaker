@@ -215,3 +215,30 @@ TilesetObjects = [
     EditGroundGoal,
     EditGroundStart,
     ]
+
+MinDimensions = {
+    EditRengaBlock: (1, 1),
+    EditHatenaBlock: (1, 1),
+    EditHardBlock: (1, 1),
+    EditKumoBlock: (1, 1),
+    EditIceBlock: (1, 1),
+    EditGround: (1, 1),
+    EditCoin: (1, 1),
+    EditDokan: (2, 2),
+    EditGroundBox: (3, 3),
+    EditGroundGoal: (10, 2),
+    EditGroundStart: (5, 2),
+    }
+
+MaxDimensions = {
+    EditRengaBlock: (1, 1),
+    EditHatenaBlock: (1, 1),
+    EditHardBlock: (1, 1),
+    EditKumoBlock: (1, 1),
+    EditIceBlock: (1, 1),
+    EditGround: (1, 1),
+    EditCoin: (1, 1),
+    EditDokan: (2, 255),
+    EditGroundGoal: (252, 2),
+    EditGroundStart: (252, 2),
+    }

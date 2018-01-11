@@ -162,6 +162,9 @@ class LevelViewWidget(QtWidgets.QGraphicsView):
                 if type_ in objectsZValues[z]:
                     break
 
+            if type_ == EditGroundBox:
+                z -= 0x100000000
+
             item = PixmapItem(type_, clickedx, clickedy, z, w, h, pix, data)
 
             if parentFlags:
